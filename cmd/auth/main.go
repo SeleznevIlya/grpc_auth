@@ -1,7 +1,15 @@
-package auth
+package main
+
+import (
+	"fmt"
+
+	"github.com/SeleznevIlya/grpc_auth/internal/config"
+)
 
 func main() {
-	// TODO: инициализировать объект конфига
+	cfg := config.MustLoad()
+
+	fmt.Println(cfg)
 
 	// TODO: инициализировать логгер
 
