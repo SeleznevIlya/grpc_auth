@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/SeleznevIlya/grpc_auth/internal/app"
 	"github.com/SeleznevIlya/grpc_auth/internal/config"
 	"github.com/SeleznevIlya/grpc_auth/internal/lib/logger/handlers/slogpretty"
 )
@@ -19,17 +20,11 @@ func main() {
 
 	log := setupLogger(cfg.Env)
 
-	log.Info("starting application",
-		slog.String("env", cfg.Env),
-		slog.Any("cfg", cfg),
-		slog.Int("port", cfg.GRPC.Port),
-	)
+	log.Info("starting application", slog.Any("config", cfg))
 
-	log.Debug("debug message")
+	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
 
-	log.Error("error message")
-
-	log.Warn("warn message")
+	application.GRPCSrv.MustRun()
 
 	// TODO: инициализировать приложение (app)
 
