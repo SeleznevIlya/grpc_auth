@@ -4,11 +4,11 @@ import (
 	"log/slog"
 	"time"
 
-	grpcapp "github.com/SeleznevIlya/grpc_auth/internal/app/grpc"
+	grpcApp "github.com/SeleznevIlya/grpc_auth/internal/app/grpc"
 )
 
 type App struct {
-	GRPCSrv *grpcapp.App
+	GRPCSrv *grpcApp.App
 }
 
 func New(
@@ -21,7 +21,7 @@ func New(
 
 	// TODO: init auth service (auth)
 
-	grpcApp := grpcapp.New(log, grpcPort)
+	grpcApp := grpcApp.New(log, grpcPort)
 
 	return &App{
 		GRPCSrv: grpcApp,
