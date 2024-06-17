@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS users
+(
+    id        SERIAL PRIMARY KEY,
+    email     TEXT NOT NULL UNIQUE,
+    pass_hash TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_email ON users (email);
+
+CREATE TABLE IF NOT EXISTS apps
+(
+    id     INTEGER PRIMARY KEY,
+    name   TEXT NOT NULL UNIQUE,
+    secret TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS is_admin
+(
+    id        SERIAL PRIMARY KEY,
+    user_id   INTEGER NOT NULL,
+    is_admin  BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
