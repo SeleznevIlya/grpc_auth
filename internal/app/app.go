@@ -5,6 +5,8 @@ import (
 	"time"
 
 	grpcApp "github.com/SeleznevIlya/grpc_auth/internal/app/grpc"
+	"github.com/SeleznevIlya/grpc_auth/internal/services/auth"
+	"github.com/SeleznevIlya/grpc_auth/internal/storage/postgres"
 )
 
 type App struct {
@@ -17,11 +19,14 @@ func New(
 	storagePath string,
 	tokenTTL time.Duration,
 ) *App {
-	// TODO: инициализировать хранилище (storage)
+	storage, err := postgres.New(storagePath)
+	if err != nil {
+		panic(err)
+	}
 
-	// TODO: init auth service (auth)
+	authService := auth.New(log, storage, storage, storage, tokenTTL)
 
-	grpcApp := grpcApp.New(log, grpcPort)
+	grpcApp := grpcApp.New(log, authService, grpcPort)
 
 	return &App{
 		GRPCSrv: grpcApp,
