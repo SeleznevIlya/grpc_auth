@@ -20,6 +20,7 @@ func New(storagePath string) (*Storage, error) {
 	const op = "storage.postgres.New"
 
 	db, err := sql.Open("postgres", storagePath)
+
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -30,7 +31,7 @@ func New(storagePath string) (*Storage, error) {
 func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (uid int64, err error) {
 	const op = "storage.postgres.SaveUser"
 
-	stmt, err := s.db.Prepare("INSERT INTO users(email, password) VALUES (?, ?)")
+	stmt, err := s.db.Prepare("INSERT INTO users(email, pass_hash) VALUES ($1, $2)")
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
@@ -46,20 +47,26 @@ func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	// Получаем ID созданной записи
-	id, err := res.LastInsertId()
+	res.RowsAffected()
+	// // Получаем ID созданной записи
+	// id, err := res.LastInsertId()
+	// if err != nil {
+	// 	return 0, fmt.Errorf("%s: %w", op, err)
+	// }
+
+	user, err := s.User(ctx, email)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return id, nil
+	return user.ID, nil
 }
 
 // User returns user by email.
 func (s *Storage) User(ctx context.Context, email string) (models.User, error) {
 	const op = "storage.postgres.User"
 
-	stmt, err := s.db.Prepare("SELECT id, email, pass_hash FROM users WHERE email=?")
+	stmt, err := s.db.Prepare("SELECT id, email, pass_hash FROM users WHERE email=$1")
 	if err != nil {
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}

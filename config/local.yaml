@@ -1,6 +1,12 @@
 env: "local" # dev, prod
 
-storage_path: "./storage/grpc_auth.db"
+# storage_path: "./storage/grpc_auth.db"
+# storage_path: "postgres:mbc26c@localhost:5436/postgres?sslmode=disable"
+
+# storage_path: "postgres:mbc26c@localhost:5432/grpc?sslmode=disable"
+
+storage_path: "host=localhost port=5432 user=postgres dbname=grpc password=mbc26c sslmode=disable"
+
 
 token_ttl: 1h
 
