@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/SeleznevIlya/grpc_auth/internal/services/auth"
-	"github.com/SeleznevIlya/grpc_auth/internal/storage"
 	grpc_authv1 "github.com/SeleznevIlya/protos/gen/go/grpc_auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -53,9 +52,7 @@ func (s *serverApi) Login(ctx context.Context, req *grpc_authv1.LoginRequest) (*
 		return nil, status.Error(codes.Internal, "failed to login")
 	}
 
-	return &grpc_authv1.LoginResponse{
-		Token: token,
-	}, nil
+	return &grpc_authv1.LoginResponse{Token: token}, nil
 }
 
 func (s *serverApi) Register(ctx context.Context, req *grpc_authv1.RegisterRequest) (*grpc_authv1.RegisterResponse, error) {
@@ -65,15 +62,13 @@ func (s *serverApi) Register(ctx context.Context, req *grpc_authv1.RegisterReque
 
 	userID, err := s.auth.RegisterNewUser(ctx, req.GetEmail(), req.GetPassword())
 	if err != nil {
-		if errors.Is(err, storage.ErrUserExists) {
+		if errors.Is(err, auth.ErrUserExists) {
 			return nil, status.Error(codes.AlreadyExists, "user already exists")
 		}
 		return nil, status.Error(codes.Internal, "failed to register user")
 	}
 
-	return &grpc_authv1.RegisterResponse{
-		UserId: userID,
-	}, nil
+	return &grpc_authv1.RegisterResponse{UserId: userID}, nil
 
 }
 
@@ -84,15 +79,13 @@ func (s *serverApi) IsAdmin(ctx context.Context, req *grpc_authv1.IsAdminRequest
 
 	isAdmin, err := s.auth.IsAdmin(ctx, req.GetUserId())
 	if err != nil {
-		if errors.Is(err, storage.ErrUserNotFound) {
+		if errors.Is(err, auth.ErrUserNotFound) {
 			return nil, status.Error(codes.NotFound, "user not found")
 		}
 		return nil, status.Error(codes.Internal, "failed to check admin status")
 	}
 
-	return &grpc_authv1.IsAdminResponse{
-		IsAdmin: isAdmin,
-	}, nil
+	return &grpc_authv1.IsAdminResponse{IsAdmin: isAdmin}, nil
 }
 
 func validateLogin(req *grpc_authv1.LoginRequest) error {

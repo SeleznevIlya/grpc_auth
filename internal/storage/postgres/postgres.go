@@ -59,6 +59,11 @@ func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
+	err = s.SaveUserInIsAdmin(ctx, user.ID, false)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
 	return user.ID, nil
 }
 
@@ -87,7 +92,7 @@ func (s *Storage) User(ctx context.Context, email string) (models.User, error) {
 func (s *Storage) IsAdmin(ctx context.Context, userID int64) (bool, error) {
 	const op = "storage.postgres.IsAdmin"
 
-	stmt, err := s.db.Prepare("SELECT is_admin FROM is_admin WHERE user_id=?")
+	stmt, err := s.db.Prepare("SELECT is_admin FROM is_admin WHERE user_id=$1")
 	if err != nil {
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
@@ -109,7 +114,7 @@ func (s *Storage) IsAdmin(ctx context.Context, userID int64) (bool, error) {
 func (s *Storage) App(ctx context.Context, appID int) (models.App, error) {
 	const op = "storage.postgres.App"
 
-	stmt, err := s.db.Prepare("SELECT id, name, secret FROM app WHERE id=?")
+	stmt, err := s.db.Prepare("SELECT id, name, secret FROM apps WHERE id=$1")
 	if err != nil {
 		return models.App{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -125,4 +130,28 @@ func (s *Storage) App(ctx context.Context, appID int) (models.App, error) {
 	}
 
 	return app, nil
+}
+
+func (s *Storage) SaveUserInIsAdmin(ctx context.Context, uid int64, is_admin bool) error {
+	const op = "storage.postgres.SaveUserInIsAdmin"
+
+	stmt, err := s.db.Prepare("INSERT INTO is_admin(user_id, is_admin) VALUES ($1, $2)")
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	res, err := stmt.ExecContext(ctx, uid, is_admin)
+	if err != nil {
+		var postgresErr *pq.Error
+
+		if errors.As(err, &postgresErr) && postgresErr.Code == pq.ErrorCode("23505") {
+			return fmt.Errorf("%s: %w", op, storage.ErrUserExists)
+		}
+
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	res.RowsAffected()
+
+	return nil
 }
